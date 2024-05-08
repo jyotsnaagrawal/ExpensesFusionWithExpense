@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <EditText
+        android:id="@+id/editTextExpenseName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:hint="Expense Name"
+        android:padding="16dp" />
+
+    <EditText
+        android:id="@+id/editTextExpenseAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Expense Amount"
+        android:inputType="numberDecimal"
+        android:padding="16dp"
+        android:layout_below="@id/editTextExpenseName"
+        android:layout_marginTop="8dp" />
+
+    <CheckBox
+        android:id="@+id/checkBoxTaxDeductible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tax Deductible"
+        android:padding="8dp"
+        android:layout_below="@id/editTextExpenseAmount"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/buttonAddExpense"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add Expense"
+        android:padding="16dp"
+        android:backgroundTint="@color/yellow"
+        android:layout_below="@id/checkBoxTaxDeductible"
+        android:layout_marginTop="16dp" />
+
+    <!-- TextViews for displaying summary -->
+    <TextView
+        android:id="@+id/textViewTotalExpenses"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/buttonAddExpense"
+        android:layout_marginTop="16dp"
+        android:text="Total Expenses: "
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/textViewTotalAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textViewTotalExpenses"
+        android:layout_marginTop="8dp"
+        android:text="Total Amount: "
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/textViewAverageAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textViewTotalAmount"
+        android:layout_marginTop="8dp"
+        android:text="Average Amount: "
+        android:textSize="18sp" />
+
+    <!-- RecyclerView for displaying expenses -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewExpenses"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textViewAverageAmount"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp" />
+
+</RelativeLayout>

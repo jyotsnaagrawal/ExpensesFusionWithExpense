@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "47232812488",
+    "project_id": "expensefusion-c71ac",
+    "storage_bucket": "expensefusion-c71ac.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:47232812488:android:04c5bb80a12a239dbfecfd",
+        "android_client_info": {
+          "package_name": "com.jyotsna.expensesfusion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeu3-4WCjfM51VRzF2398mKNsaBM7QP4I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
