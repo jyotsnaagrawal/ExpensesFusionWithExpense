@@ -1,7 +1,10 @@
 package com.jyotsna.expensesfusion
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.jyotsna.expensesfusion.databinding.ActivitySignInBinding
@@ -17,40 +20,49 @@ class SignInActivity : AppCompatActivity() {
         binding = ActivitySignInBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Initialize FirebaseAuth
         firebaseAuth = FirebaseAuth.getInstance()
 
-        // Check if the user is already authenticated, then navigate to MainActivity
-        if (firebaseAuth.currentUser != null) {
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
+        binding.button.setOnClickListener {
+            // Hide the keyboard before processing sign-in
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(binding.root.windowToken, 0)
+
+            // Run Firebase sign-in after a slight delay to allow keyboard animation to finish
+            binding.root.postDelayed({
+                performSignIn()
+            }, 200)
         }
 
         binding.textView.setOnClickListener {
-            // Navigate to SignUpActivity when "Not Registered Yet, Sign Up!" is clicked
+            Log.d("SignInActivity", "Navigating to SignUpActivity")
             startActivity(Intent(this, SignUpActivity::class.java))
-            finish()
+        }
+    }
+
+    private fun performSignIn() {
+        val email = binding.emailEt.text.toString().trim()
+        val pass = binding.passET.text.toString().trim()
+
+        if (email.isEmpty() || pass.isEmpty()) {
+            Toast.makeText(this, "Email and password cannot be empty", Toast.LENGTH_SHORT).show()
+            return
         }
 
-        binding.button.setOnClickListener {
-            val email = binding.emailEt.text.toString()
-            val pass = binding.passET.text.toString()
-
-            if (email.isNotEmpty() && pass.isNotEmpty()) {
-                // Sign in with Firebase Auth
-                firebaseAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        // Navigate to MainActivity after successful sign-in
-                        startActivity(Intent(this, MainActivity::class.java))
-                        finish()
-                    } else {
-                        // Display error message if sign-in fails
-                        Toast.makeText(this, "Authentication failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                    }
+        firebaseAuth.signInWithEmailAndPassword(email, pass)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("SignInActivity", "Sign-In Successful")
+                    startActivity(Intent(this, MainActivity::class.java))
+                    finish()
+                } else {
+                    Log.e("SignInActivity", "Sign-In Failed: ${task.exception?.message}")
+                    Toast.makeText(
+                        this,
+                        "Sign-In failed: ${task.exception?.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-            } else {
-                // Display error message if email or password is empty
-                Toast.makeText(this, "Email and password are required", Toast.LENGTH_SHORT).show()
             }
-        }
     }
 }

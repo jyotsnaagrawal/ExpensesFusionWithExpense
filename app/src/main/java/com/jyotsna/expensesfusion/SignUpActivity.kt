@@ -22,7 +22,9 @@ class SignUpActivity : AppCompatActivity() {
 
         binding.textView.setOnClickListener {
             // Navigate to SignInActivity when "Already Registered, Sign In!" is clicked
-            startActivity(Intent(this, SignInActivity::class.java))
+            val intent = Intent(this, SignInActivity::class.java)
+            intent.putExtra("fromSignUp", true) // Add an extra flag for context
+            startActivity(intent)
             finish() // Finish SignUpActivity to prevent returning to it via Back button
         }
 
