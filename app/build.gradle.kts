@@ -58,6 +58,7 @@ dependencies {
     // Foundation and support libraries
     implementation(libs.androidx.foundation.android)
     implementation(libs.support.annotations)
+    implementation(libs.firebase.auth)
 
     // Unit Testing dependencies
     testImplementation(libs.junit)

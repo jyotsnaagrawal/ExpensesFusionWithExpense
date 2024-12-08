@@ -3,9 +3,12 @@
             android:id="@+id/navigation_split_bills"
             android:icon="@drawable/ic_splitbill_foreground"
             android:title="Split Bills" />
-
         <item
             android:id="@+id/navigation_expense_tracker"
             android:icon="@drawable/ic_expensetracker_foreground"
             android:title="Expense Tracker" />
+        <item
+            android:id="@+id/navigation_groups"
+            android:icon="@drawable/ic_groups_foreground"
+        android:title="Groups" />
 </menu>
