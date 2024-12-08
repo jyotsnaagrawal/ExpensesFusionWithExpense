@@ -1,0 +1,56 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Amount Input -->
+    <EditText
+        android:id="@+id/amountEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Amount"
+        android:inputType="numberDecimal"
+        android:minHeight="48dp"
+    android:padding="12dp"
+    android:background="@android:drawable/edit_text"
+    android:layout_marginBottom="8dp" />
+
+    <!-- Category Input -->
+    <EditText
+        android:id="@+id/categoryEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Category"
+        android:inputType="text"
+        android:minHeight="48dp"
+    android:padding="12dp"
+    android:background="@android:drawable/edit_text"
+    android:layout_marginBottom="8dp" />
+
+    <!-- Date Input -->
+    <EditText
+        android:id="@+id/dateEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Date (YYYY-MM-DD)"
+        android:inputType="date"
+        android:minHeight="48dp"
+    android:padding="12dp"
+    android:background="@android:drawable/edit_text"
+    android:layout_marginBottom="8dp" />
+
+    <!-- Description Input -->
+    <EditText
+        android:id="@+id/descriptionEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Description"
+        android:inputType="text"
+        android:minHeight="48dp"
+    android:padding="12dp"
+    android:background="@android:drawable/edit_text"
+    android:layout_marginBottom="8dp" />
+
+</LinearLayout>

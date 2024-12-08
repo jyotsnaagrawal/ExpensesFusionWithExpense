@@ -55,6 +55,9 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx") // Firebase Authentication
     implementation("com.google.firebase:firebase-database-ktx") // Firebase Realtime Database (KTX)
 
+    // MPAndroidChart dependency
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
     // Foundation and support libraries
     implementation(libs.androidx.foundation.android)
     implementation(libs.support.annotations)
