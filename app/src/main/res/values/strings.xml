@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">ExpensesFusion</string>
+    <string name="app_name">Expenses Fusion</string>
+    <string name="logo_description">Logo of the application</string>
 </resources>

@@ -2,6 +2,7 @@ package com.jyotsna.expensesfusion
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
@@ -11,22 +12,26 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-        bottomNavigationView.setOnNavigationItemSelectedListener { item ->
+
+        // Set default view for Home (no fragment loaded)
+        bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.navigation_home -> {
-                    // Handle Home navigation
-                    true
-                }
                 R.id.navigation_split_bills -> {
-                    // Handle Split Bills navigation
+                    loadFragment(SplitBillsFragment())
                     true
                 }
                 R.id.navigation_expense_tracker -> {
-                    // Handle Expense Tracker navigation
+                    loadFragment(ExpenseTrackerFragment())
                     true
                 }
                 else -> false
             }
         }
+    }
+
+    private fun loadFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .commit()
     }
 }
