@@ -9,9 +9,11 @@
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     <color name="red_500">#F44336</color>
-
-
-
     <color name="yellow">#C7A551</color>
     <color name="grey">#413F3B</color>
+
+    <!-- Added Primary Colors -->
+    <color name="primaryColor">#6200EE</color> <!-- Replace this with your preferred hex code -->
+    <color name="primaryColorDark">#3700B3</color> <!-- Darker shade for primary color -->
+    <color name="primaryColorLight">#BB86FC</color> <!-- Lighter shade for primary color -->
 </resources>
