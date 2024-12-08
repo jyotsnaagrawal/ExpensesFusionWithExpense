@@ -1,26 +1,26 @@
 package com.jyotsna.expensesfusion
 
 import android.os.Bundle
-import android.text.InputType
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.database.*
 
 class GroupsFragment : Fragment() {
 
-    private lateinit var firestore: FirebaseFirestore
+    private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
     private lateinit var groupsAdapter: GroupsAdapter
+    private lateinit var fullGroupsList: List<Pair<String, Map<String, Any>>>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -28,13 +28,14 @@ class GroupsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_groups, container, false)
 
-        firestore = FirebaseFirestore.getInstance()
+        database = FirebaseDatabase.getInstance().reference
         auth = FirebaseAuth.getInstance()
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.groupsRecyclerView)
+        val searchGroupEditText = view.findViewById<EditText>(R.id.searchGroupEditText)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Initialize the adapter with callbacks
+        // Initialize adapter with callbacks
         groupsAdapter = GroupsAdapter(
             requireContext(),
             onUpdateGroupClicked = ::showUpdateDialog,
@@ -46,11 +47,22 @@ class GroupsFragment : Fragment() {
         // Load groups in real-time
         loadGroups()
 
+        // Add text watcher for the search bar
+        searchGroupEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                filterGroups(s.toString())
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
         return view
     }
 
     /**
-     * Loads groups in real-time using Firestore snapshot listener.
+     * Load groups from Firebase Realtime Database in real-time.
      */
     private fun loadGroups() {
         val currentUser = auth.currentUser
@@ -59,40 +71,60 @@ class GroupsFragment : Fragment() {
             return
         }
 
-        firestore.collection("groups")
-            .whereEqualTo("userId", currentUser.uid)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Log.e("GroupsFragment", "Error loading groups: ${error.message}")
-                    Toast.makeText(requireContext(), "Failed to load groups.", Toast.LENGTH_SHORT).show()
-                    return@addSnapshotListener
+        database.child("groups")
+            .orderByChild("userId")
+            .equalTo(currentUser.uid)
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    fullGroupsList = snapshot.children.map { groupSnapshot ->
+                        val groupId = groupSnapshot.key ?: return@map null
+                        val groupData = groupSnapshot.value as Map<String, Any>
+                        Pair(groupId, groupData)
+                    }.filterNotNull()
+
+                    // Update adapter with full list
+                    groupsAdapter.updateGroups(fullGroupsList)
                 }
 
-                if (snapshot != null && !snapshot.isEmpty) {
-                    val groupsList = snapshot.documents.map { document ->
-                        Pair(document.id, document.data ?: emptyMap())
-                    }
-                    groupsAdapter.updateGroups(groupsList)
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("GroupsFragment", "Failed to load groups: ${error.message}")
+                    Toast.makeText(requireContext(), "Failed to load groups.", Toast.LENGTH_SHORT).show()
                 }
-            }
+            })
     }
 
     /**
-     * Shows a dialog to update the group's name.
+     * Filters the groups based on the search query.
+     */
+    private fun filterGroups(query: String) {
+        val filteredGroups = if (query.isEmpty()) {
+            fullGroupsList
+        } else {
+            fullGroupsList.filter { group ->
+                val groupName = group.second["name"] as? String ?: ""
+                groupName.contains(query, ignoreCase = true)
+            }
+        }
+
+        groupsAdapter.updateGroups(filteredGroups)
+    }
+
+    /**
+     * Show a dialog to update the group name.
      */
     private fun showUpdateDialog(groupId: String, currentName: String) {
         val editText = EditText(requireContext())
         editText.setText(currentName)
-        editText.inputType = InputType.TYPE_CLASS_TEXT
 
-        AlertDialog.Builder(requireContext())
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("Update Group Name")
             .setView(editText)
             .setPositiveButton("Update") { _, _ ->
                 val newName = editText.text.toString().trim()
                 if (newName.isNotEmpty()) {
-                    firestore.collection("groups").document(groupId)
-                        .update("name", newName)
+                    database.child("groups").child(groupId)
+                        .child("name")
+                        .setValue(newName)
                         .addOnSuccessListener {
                             Toast.makeText(requireContext(), "Group updated.", Toast.LENGTH_SHORT).show()
                         }
@@ -109,15 +141,15 @@ class GroupsFragment : Fragment() {
     }
 
     /**
-     * Deletes a group based on its ID.
+     * Deletes a group by its ID.
      */
     private fun deleteGroup(groupId: String) {
-        AlertDialog.Builder(requireContext())
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("Delete Group")
             .setMessage("Are you sure you want to delete this group?")
             .setPositiveButton("Delete") { _, _ ->
-                firestore.collection("groups").document(groupId)
-                    .delete()
+                database.child("groups").child(groupId)
+                    .removeValue()
                     .addOnSuccessListener {
                         Toast.makeText(requireContext(), "Group deleted.", Toast.LENGTH_SHORT).show()
                     }
@@ -131,21 +163,22 @@ class GroupsFragment : Fragment() {
     }
 
     /**
-     * Shows a dialog to add a friend to the group.
+     * Show a dialog to add a friend to the group.
      */
     private fun showAddFriendDialog(groupId: String) {
         val editText = EditText(requireContext())
         editText.hint = "Enter friend's email"
-        editText.inputType = InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
 
-        AlertDialog.Builder(requireContext())
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("Add Friend to Group")
             .setView(editText)
             .setPositiveButton("Add") { _, _ ->
                 val email = editText.text.toString().trim()
                 if (email.isNotEmpty()) {
-                    firestore.collection("groups").document(groupId)
-                        .update("friends", FieldValue.arrayUnion(email))
+                    database.child("groups").child(groupId)
+                        .child("friends")
+                        .child(email.replace(".", "_")) // Replace "." for valid Firebase keys
+                        .setValue(true)
                         .addOnSuccessListener {
                             Toast.makeText(requireContext(), "Friend added successfully!", Toast.LENGTH_SHORT).show()
                         }

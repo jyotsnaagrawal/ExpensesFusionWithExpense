@@ -14,9 +14,11 @@
         android:hint="Enter Group Name"
         android:padding="12dp"
         android:background="@android:drawable/edit_text"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:inputType="textCapWords"
+        android:gravity="center" />
 
-    <!-- Button to save group to Firestore -->
+    <!-- Button to save group -->
     <Button
         android:id="@+id/addGroupButton"
         android:layout_width="wrap_content"
@@ -24,5 +26,7 @@
         android:text="Add Group"
         android:padding="12dp"
         android:backgroundTint="@color/purple_500"
-        android:textColor="@android:color/white" />
+        android:textColor="@android:color/white"
+        android:elevation="4dp"
+        android:layout_gravity="center" />
 </LinearLayout>

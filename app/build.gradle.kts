@@ -51,14 +51,14 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
 
     // Firebase dependencies
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0")) // Import Firebase BOM for version management
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0")) // Firebase BOM for version management
     implementation("com.google.firebase:firebase-auth-ktx") // Firebase Authentication
-    implementation("com.google.firebase:firebase-firestore-ktx") // Firebase Firestore with Kotlin support
+    implementation("com.google.firebase:firebase-database-ktx") // Firebase Realtime Database (KTX)
 
     // Foundation and support libraries
     implementation(libs.androidx.foundation.android)
     implementation(libs.support.annotations)
-    implementation(libs.firebase.auth)
+    implementation(libs.google.firebase.firestore.ktx)
 
     // Unit Testing dependencies
     testImplementation(libs.junit)
