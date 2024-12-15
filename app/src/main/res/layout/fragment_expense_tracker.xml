@@ -5,6 +5,7 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- Total Expenses Text -->
     <TextView
         android:id="@+id/totalExpensesTextView"
         android:layout_width="wrap_content"
@@ -29,12 +30,32 @@
         android:textSize="16sp"
         android:layout_marginBottom="8dp" />
 
+    <!-- Date Filter -->
+    <EditText
+        android:id="@+id/dateFilterEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Filter Date (YYYY-MM-DD)"
+        android:inputType="date"
+        android:background="@android:drawable/edit_text"
+        android:padding="12dp"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/filterButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Filter Expenses"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Pie Chart -->
     <com.github.mikephil.charting.charts.PieChart
         android:id="@+id/pieChart"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_marginBottom="16dp" />
 
+    <!-- Bar Chart -->
     <com.github.mikephil.charting.charts.BarChart
         android:id="@+id/barChart"
         android:layout_width="match_parent"
@@ -46,4 +67,5 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Add Expense" />
+
 </LinearLayout>

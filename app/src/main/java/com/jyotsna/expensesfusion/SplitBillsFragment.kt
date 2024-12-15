@@ -1,5 +1,6 @@
 package com.jyotsna.expensesfusion
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -7,17 +8,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentTransaction
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
+import com.jyotsna.expensesfusion.adapters.Group
+
 
 class SplitBillsFragment : Fragment() {
 
     private lateinit var database: DatabaseReference
+    private lateinit var groupsRecyclerView: RecyclerView
+    private lateinit var groupsAdapter: GroupsAdapter
+    private lateinit var noGroupsTextView: TextView
+    private lateinit var createGroupButton: Button
+
+    private var groupsList: MutableList<Group> = mutableListOf()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -25,75 +34,121 @@ class SplitBillsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_split_bills, container, false)
 
-        // Initialize Firebase Realtime Database
+        // Initialize Firebase
         database = FirebaseDatabase.getInstance().reference
+        val currentUser = FirebaseAuth.getInstance().currentUser
 
-        // Find views
-        val groupNameEditText = view.findViewById<EditText>(R.id.groupNameEditText)
-        val addGroupButton = view.findViewById<Button>(R.id.addGroupButton)
+        // Initialize Views
+        noGroupsTextView = view.findViewById(R.id.noGroupsTextView)
+        createGroupButton = view.findViewById(R.id.createGroupButton)
+        groupsRecyclerView = view.findViewById(R.id.groupsRecyclerView)
 
-        // Set button click listener
-        addGroupButton.setOnClickListener {
-            val groupName = groupNameEditText.text.toString().trim()
+        // RecyclerView setup
+        groupsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        groupsAdapter = GroupsAdapter(groupsList) { groupId ->
+            navigateToGroupDetails(groupId)
+        }
+        groupsRecyclerView.adapter = groupsAdapter
 
-            if (groupName.isNotEmpty()) {
-                saveGroupToRealtimeDatabase(groupName)
-                groupNameEditText.text.clear() // Clear the input after saving
-            } else {
-                Toast.makeText(requireContext(), "Please enter a group name", Toast.LENGTH_SHORT).show()
-            }
+        // Load groups data
+        loadGroupsData(currentUser?.uid)
+
+        // Create Group Button Listener
+        createGroupButton.setOnClickListener {
+            showCreateGroupDialog()
         }
 
         return view
     }
 
-    /**
-     * Save the group to Firebase Realtime Database.
-     */
-    private fun saveGroupToRealtimeDatabase(groupName: String) {
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser == null) {
-            Toast.makeText(requireContext(), "Please log in to save a group", Toast.LENGTH_SHORT).show()
-            return
-        }
+    private fun loadGroupsData(userId: String?) {
+        if (userId == null) return
 
-        val groupId = database.child("groups").push().key // Generate a unique group ID
-        if (groupId == null) {
-            Toast.makeText(requireContext(), "Failed to generate group ID", Toast.LENGTH_SHORT).show()
-            return
-        }
+        database.child("groups")
+            .orderByChild("userId")
+            .equalTo(userId) // Only fetch groups for the current user
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    groupsList.clear() // Clear the list before adding new data
 
-        val group = mapOf(
-            "name" to groupName,
-            "userId" to currentUser.uid,
-            "created_at" to System.currentTimeMillis(),
-            "friends" to mapOf<String, Boolean>() // Empty friends list
+                    snapshot.children.forEach { groupSnapshot ->
+                        val groupId = groupSnapshot.key
+                        val group = groupSnapshot.getValue(Group::class.java)?.copy(id = groupId ?: "")
+                        group?.let {
+                            groupsList.add(it) // Add each valid group to the list
+                        }
+                    }
+
+                    // Log the list size for debugging
+                    Log.d("SplitBillsFragment", "Groups List Size: ${groupsList.size}")
+
+                    // Update RecyclerView
+                    groupsAdapter.updateGroups(groupsList)
+
+                    // Toggle views if the list is empty
+                    toggleEmptyState(groupsList.isEmpty())
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(requireContext(), "Failed to load groups: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
+    private fun toggleEmptyState(isEmpty: Boolean) {
+        if (isEmpty) {
+            groupsRecyclerView.visibility = View.GONE
+            noGroupsTextView.visibility = View.VISIBLE
+        } else {
+            groupsRecyclerView.visibility = View.VISIBLE
+            noGroupsTextView.visibility = View.GONE
+        }
+    }
+
+    private fun showCreateGroupDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_group, null)
+        val groupNameEditText = dialogView.findViewById<EditText>(R.id.groupNameEditText)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Create Group")
+            .setView(dialogView)
+            .setPositiveButton("Create") { _, _ ->
+                val groupName = groupNameEditText.text.toString().trim()
+                if (groupName.isNotEmpty()) {
+                    saveGroupToFirebase(groupName)
+                } else {
+                    Toast.makeText(requireContext(), "Group name cannot be empty.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun saveGroupToFirebase(groupName: String) {
+        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
+        val groupId = database.child("groups").push().key ?: return
+
+        val newGroup = Group(
+            id = groupId,
+            name = groupName,
+            userId = currentUser.uid,
+            bills = null
         )
 
-        database.child("groups").child(groupId).setValue(group)
+        database.child("groups").child(groupId).setValue(newGroup)
             .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Group added successfully!", Toast.LENGTH_SHORT).show()
-                navigateToGroupsFragment()
+                Toast.makeText(requireContext(), "Group created successfully!", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { exception ->
-                Log.e("RealtimeDatabaseError", "Error adding group: ${exception.message}")
-                Toast.makeText(requireContext(), "Failed to add group", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to create group.", Toast.LENGTH_SHORT).show()
             }
     }
 
-    /**
-     * Navigate to the GroupsFragment.
-     */
-    private fun navigateToGroupsFragment() {
-        try {
-            val fragmentManager: FragmentManager = requireActivity().supportFragmentManager
-            val transaction: FragmentTransaction = fragmentManager.beginTransaction()
-            transaction.replace(R.id.fragment_container, GroupsFragment())
-            transaction.addToBackStack(null) // Optional: Add this transaction to the back stack
-            transaction.commit()
-            Log.d("Navigation", "Navigated to GroupsFragment")
-        } catch (e: Exception) {
-            Log.e("NavigationError", "Error navigating to GroupsFragment: ${e.message}")
-        }
+    private fun navigateToGroupDetails(groupId: String) {
+        val fragment = GroupDetailFragment.newInstance(groupId)
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 }

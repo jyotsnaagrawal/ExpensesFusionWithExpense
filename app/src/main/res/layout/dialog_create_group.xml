@@ -2,13 +2,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="16dp">
 
-    <TextView
-        android:id="@+id/groupNameTextView"
-        android:layout_width="wrap_content"
+    <EditText
+        android:id="@+id/groupNameEditText"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Group Name"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:hint="Enter group name"
+        android:minHeight="48dp"
+        android:padding="12dp" />
 </LinearLayout>
