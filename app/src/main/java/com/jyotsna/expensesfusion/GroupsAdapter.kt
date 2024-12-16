@@ -1,11 +1,12 @@
-package com.jyotsna.expensesfusion
+package com.jyotsna.expensesfusion.adapters
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.jyotsna.expensesfusion.adapters.Group
+import com.jyotsna.expensesfusion.R
+import com.jyotsna.expensesfusion.models.Group // Correct import for your Group model
 
 class GroupsAdapter(
     private var groupsList: List<Group>,
@@ -25,7 +26,7 @@ class GroupsAdapter(
 
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val group = groupsList[position]
-        holder.groupNameTextView.text = group.name ?: "Unnamed Group"
+        holder.groupNameTextView.text = group.name.ifEmpty { "Unnamed Group" }
 
         // Handle group item click
         holder.itemView.setOnClickListener {

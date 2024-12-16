@@ -1,19 +1,40 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="12dp">
+    android:orientation="vertical"
+    android:padding="8dp">
 
+    <!-- Bill Title -->
     <TextView
         android:id="@+id/billTitleTextView"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Title" />
+        android:text="Bill Title"
+        android:textStyle="bold"
+        android:textSize="16sp" />
 
+    <!-- Bill Amount -->
     <TextView
         android:id="@+id/billAmountTextView"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Amount" />
+        android:text="$0.00"
+        android:textSize="14sp" />
+
+    <!-- Paid By -->
+    <TextView
+        android:id="@+id/billPaidByTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Paid by: "
+        android:textSize="12sp" />
+
+    <!-- Participants -->
+    <TextView
+        android:id="@+id/billParticipantsTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Participants: "
+        android:textSize="12sp" />
+
 </LinearLayout>

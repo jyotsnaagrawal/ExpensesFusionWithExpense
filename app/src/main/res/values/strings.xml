@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">Expenses Fusion</string>
-    <string name="logo_description">Logo of the application</string>
+    <string name="bill_title_hint">Bill Title</string>
+    <string name="amount_hint">Enter Amount</string>
+    <string name="paid_by_label">Paid By</string>
+    <string name="participants_label">Participants</string>
+    <string name="participant_name_hint">Enter participant name</string>
+    <string name="add_participant_label">Add Participant</string>
 </resources>
+

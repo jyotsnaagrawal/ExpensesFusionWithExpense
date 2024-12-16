@@ -15,7 +15,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import com.jyotsna.expensesfusion.adapters.Group
+import com.jyotsna.expensesfusion.adapters.GroupsAdapter
+import com.jyotsna.expensesfusion.models.Group
 
 class GroupsFragment : Fragment() {
 

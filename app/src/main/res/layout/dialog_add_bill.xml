@@ -1,47 +1,52 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Bill Title -->
-    <EditText
-        android:id="@+id/billTitleEditText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Bill Title"
-        android:inputType="text"
-        android:minHeight="48dp"
-        android:padding="12dp"
-        android:background="@android:drawable/edit_text" />
+        android:orientation="vertical">
 
-    <!-- Amount -->
-    <EditText
-        android:id="@+id/amountEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Amount"
-        android:inputType="numberDecimal"
-        android:minHeight="48dp"
-        android:padding="12dp"
-        android:background="@android:drawable/edit_text" />
+        <EditText
+            android:id="@+id/billTitleEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Bill Title"
+            android:inputType="text" />
 
-    <!-- Participants -->
-    <EditText
-        android:id="@+id/participantsEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Participants (comma-separated)"
-        android:inputType="text"
-        android:minHeight="48dp"
-        android:padding="12dp"
-        android:background="@android:drawable/edit_text" />
+        <EditText
+            android:id="@+id/amountEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Amount"
+            android:inputType="numberDecimal" />
 
-    <!-- Save Button -->
-    <Button
-        android:id="@+id/saveBillButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Save Bill"
-        android:layout_marginTop="8dp" />
-</LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Paid By" />
+
+        <Spinner
+            android:id="@+id/paidBySpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Participants" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/participantsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/addParticipantButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Participant" />
+
+    </LinearLayout>
+</ScrollView>

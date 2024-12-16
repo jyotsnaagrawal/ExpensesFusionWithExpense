@@ -2,31 +2,28 @@ package com.jyotsna.expensesfusion
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import com.jyotsna.expensesfusion.adapters.Group
-
+import com.jyotsna.expensesfusion.adapters.Bill
+import com.jyotsna.expensesfusion.adapters.BillsAdapter
+import com.jyotsna.expensesfusion.adapters.ParticipantsAdapter
 
 class SplitBillsFragment : Fragment() {
 
     private lateinit var database: DatabaseReference
-    private lateinit var groupsRecyclerView: RecyclerView
-    private lateinit var groupsAdapter: GroupsAdapter
-    private lateinit var noGroupsTextView: TextView
-    private lateinit var createGroupButton: Button
-
-    private var groupsList: MutableList<Group> = mutableListOf()
+    private lateinit var youOweTextView: TextView
+    private lateinit var youAreOwedTextView: TextView
+    private lateinit var billsRecyclerView: RecyclerView
+    private lateinit var billsAdapter: BillsAdapter
+    private val billsList = mutableListOf<Bill>()
+    private val groupMembers = mutableListOf<String>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,121 +31,145 @@ class SplitBillsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_split_bills, container, false)
 
-        // Initialize Firebase
         database = FirebaseDatabase.getInstance().reference
-        val currentUser = FirebaseAuth.getInstance().currentUser
+        val currentUser = FirebaseAuth.getInstance().currentUser ?: return view
 
-        // Initialize Views
-        noGroupsTextView = view.findViewById(R.id.noGroupsTextView)
-        createGroupButton = view.findViewById(R.id.createGroupButton)
-        groupsRecyclerView = view.findViewById(R.id.groupsRecyclerView)
+        // Initialize UI
+        youOweTextView = view.findViewById(R.id.youOweAmountTextView)
+        youAreOwedTextView = view.findViewById(R.id.youAreOwedAmountTextView)
+        billsRecyclerView = view.findViewById(R.id.billsRecyclerView)
+        val addBillButton = view.findViewById<Button>(R.id.addBillButton)
 
-        // RecyclerView setup
-        groupsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        groupsAdapter = GroupsAdapter(groupsList) { groupId ->
-            navigateToGroupDetails(groupId)
-        }
-        groupsRecyclerView.adapter = groupsAdapter
+        billsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        billsAdapter = BillsAdapter(billsList)
+        billsRecyclerView.adapter = billsAdapter
 
-        // Load groups data
-        loadGroupsData(currentUser?.uid)
+        loadGroupMembers("group1") // Example groupId
+        loadBillsData("group1", currentUser.uid)
 
-        // Create Group Button Listener
-        createGroupButton.setOnClickListener {
-            showCreateGroupDialog()
+        addBillButton.setOnClickListener {
+            showAddBillDialog("group1")
         }
 
         return view
     }
 
-    private fun loadGroupsData(userId: String?) {
-        if (userId == null) return
-
-        database.child("groups")
-            .orderByChild("userId")
-            .equalTo(userId) // Only fetch groups for the current user
-            .addValueEventListener(object : ValueEventListener {
+    private fun loadGroupMembers(groupId: String) {
+        database.child("groups").child(groupId).child("members")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    groupsList.clear() // Clear the list before adding new data
-
-                    snapshot.children.forEach { groupSnapshot ->
-                        val groupId = groupSnapshot.key
-                        val group = groupSnapshot.getValue(Group::class.java)?.copy(id = groupId ?: "")
-                        group?.let {
-                            groupsList.add(it) // Add each valid group to the list
-                        }
-                    }
-
-                    // Log the list size for debugging
-                    Log.d("SplitBillsFragment", "Groups List Size: ${groupsList.size}")
-
-                    // Update RecyclerView
-                    groupsAdapter.updateGroups(groupsList)
-
-                    // Toggle views if the list is empty
-                    toggleEmptyState(groupsList.isEmpty())
+                    groupMembers.clear()
+                    snapshot.children.mapNotNullTo(groupMembers) { it.getValue(String::class.java) }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(requireContext(), "Failed to load groups: ${error.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Failed to load group members.", Toast.LENGTH_SHORT).show()
                 }
             })
     }
 
-    private fun toggleEmptyState(isEmpty: Boolean) {
-        if (isEmpty) {
-            groupsRecyclerView.visibility = View.GONE
-            noGroupsTextView.visibility = View.VISIBLE
-        } else {
-            groupsRecyclerView.visibility = View.VISIBLE
-            noGroupsTextView.visibility = View.GONE
-        }
+    private fun loadBillsData(groupId: String, userId: String) {
+        database.child("groups").child(groupId).child("bills")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    billsList.clear()
+                    var totalYouOwe = 0.0
+                    var totalYouAreOwed = 0.0
+
+                    snapshot.children.forEach { billSnapshot ->
+                        val bill = billSnapshot.getValue(Bill::class.java)
+                        bill?.let {
+                            if (it.paidBy == userId) {
+                                totalYouAreOwed += it.amount ?: 0.0
+                            } else if (it.participants.contains(userId)) {
+                                totalYouOwe += (it.amount ?: 0.0) / it.participants.size
+                            }
+                            billsList.add(it)
+                        }
+                    }
+
+                    billsAdapter.notifyDataSetChanged()
+                    youOweTextView.text = "$%.2f".format(totalYouOwe)
+                    youAreOwedTextView.text = "$%.2f".format(totalYouAreOwed)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(requireContext(), "Failed to load bills.", Toast.LENGTH_SHORT).show()
+                }
+            })
     }
 
-    private fun showCreateGroupDialog() {
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_group, null)
-        val groupNameEditText = dialogView.findViewById<EditText>(R.id.groupNameEditText)
+    private fun showAddBillDialog(groupId: String) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_bill, null)
+        val titleEditText = dialogView.findViewById<EditText>(R.id.billTitleEditText)
+        val amountEditText = dialogView.findViewById<EditText>(R.id.amountEditText)
+        val paidBySpinner = dialogView.findViewById<Spinner>(R.id.paidBySpinner)
+        val participantsRecyclerView = dialogView.findViewById<RecyclerView>(R.id.participantsRecyclerView)
+        val addParticipantButton = dialogView.findViewById<Button>(R.id.addParticipantButton)
+
+        val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, groupMembers)
+        paidBySpinner.adapter = spinnerAdapter
+
+        val participantsAdapter = ParticipantsAdapter(groupMembers)
+        participantsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        participantsRecyclerView.adapter = participantsAdapter
+
+        addParticipantButton.setOnClickListener {
+            showAddParticipantDialog { newParticipant ->
+                groupMembers.add(newParticipant)
+                spinnerAdapter.notifyDataSetChanged()
+                participantsAdapter.notifyDataSetChanged()
+            }
+        }
 
         AlertDialog.Builder(requireContext())
-            .setTitle("Create Group")
+            .setTitle("Add Bill")
             .setView(dialogView)
-            .setPositiveButton("Create") { _, _ ->
-                val groupName = groupNameEditText.text.toString().trim()
-                if (groupName.isNotEmpty()) {
-                    saveGroupToFirebase(groupName)
+            .setPositiveButton("Save") { _, _ ->
+                val title = titleEditText.text.toString()
+                val amount = amountEditText.text.toString().toDoubleOrNull()
+                val paidBy = paidBySpinner.selectedItem.toString()
+                val selectedParticipants = participantsAdapter.getSelectedParticipants()
+
+                if (title.isNotEmpty() && amount != null && selectedParticipants.isNotEmpty()) {
+                    saveBillToFirebase(groupId, title, amount, paidBy, selectedParticipants)
                 } else {
-                    Toast.makeText(requireContext(), "Group name cannot be empty.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Please fill all fields correctly.", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
-    private fun saveGroupToFirebase(groupName: String) {
-        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
-        val groupId = database.child("groups").push().key ?: return
+    private fun showAddParticipantDialog(onParticipantAdded: (String) -> Unit) {
+        val inputEditText = EditText(requireContext())
+        inputEditText.hint = "Enter Participant Email"
 
-        val newGroup = Group(
-            id = groupId,
-            name = groupName,
-            userId = currentUser.uid,
-            bills = null
-        )
-
-        database.child("groups").child(groupId).setValue(newGroup)
-            .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Group created successfully!", Toast.LENGTH_SHORT).show()
+        AlertDialog.Builder(requireContext())
+            .setTitle("Add Participant")
+            .setView(inputEditText)
+            .setPositiveButton("Add") { _, _ ->
+                val newParticipant = inputEditText.text.toString().trim()
+                if (newParticipant.isNotEmpty()) {
+                    onParticipantAdded(newParticipant)
+                } else {
+                    Toast.makeText(requireContext(), "Participant email cannot be empty.", Toast.LENGTH_SHORT).show()
+                }
             }
-            .addOnFailureListener {
-                Toast.makeText(requireContext(), "Failed to create group.", Toast.LENGTH_SHORT).show()
-            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
-    private fun navigateToGroupDetails(groupId: String) {
-        val fragment = GroupDetailFragment.newInstance(groupId)
-        parentFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, fragment)
-            .addToBackStack(null)
-            .commit()
+    private fun saveBillToFirebase(groupId: String, title: String, amount: Double, paidBy: String, participants: List<String>) {
+        val billId = database.child("groups").child(groupId).child("bills").push().key ?: return
+        val bill = Bill(title, amount, paidBy, participants)
+
+        database.child("groups").child(groupId).child("bills").child(billId).setValue(bill)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Bill added successfully!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to add bill.", Toast.LENGTH_SHORT).show()
+            }
     }
 }
