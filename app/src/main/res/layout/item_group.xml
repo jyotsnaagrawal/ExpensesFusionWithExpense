@@ -9,6 +9,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Group Name"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textStyle="bold" />
 </LinearLayout>

@@ -1,40 +1,33 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="8dp">
 
-    <!-- Bill Title -->
     <TextView
-        android:id="@+id/billTitleTextView"
-        android:layout_width="match_parent"
+        android:id="@+id/titleTextView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Bill Title"
         android:textStyle="bold"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        android:text="Bill Title" />
 
-    <!-- Bill Amount -->
     <TextView
-        android:id="@+id/billAmountTextView"
-        android:layout_width="match_parent"
+        android:id="@+id/amountTextView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="$0.00"
-        android:textSize="14sp" />
+        android:text="Amount" />
 
-    <!-- Paid By -->
     <TextView
-        android:id="@+id/billPaidByTextView"
-        android:layout_width="match_parent"
+        android:id="@+id/paidByTextView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Paid by: "
-        android:textSize="12sp" />
+        android:text="Paid by" />
 
-    <!-- Participants -->
     <TextView
-        android:id="@+id/billParticipantsTextView"
-        android:layout_width="match_parent"
+        android:id="@+id/participantsTextView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Participants: "
-        android:textSize="12sp" />
-
+        android:text="Participants" />
 </LinearLayout>

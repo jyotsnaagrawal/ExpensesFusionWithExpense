@@ -1,37 +1,18 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
-
-    <TextView
-        android:id="@+id/youOweAmountTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="You Owe: $0.00"
-        android:textColor="@android:color/holo_red_dark"
-        android:textSize="18sp" />
-
-    <TextView
-        android:id="@+id/youAreOwedAmountTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="You Are Owed: $0.00"
-        android:textColor="@android:color/holo_green_dark"
-        android:textSize="18sp" />
+    android:orientation="vertical">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/billsRecyclerView"
+        android:id="@+id/groupsRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
 
     <Button
-        android:id="@+id/addBillButton"
+        android:id="@+id/createGroupButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add Bill"
-        android:backgroundTint="@color/purple_500"
-        android:textColor="@android:color/white" />
-
+        android:text="Create Group" />
 </LinearLayout>

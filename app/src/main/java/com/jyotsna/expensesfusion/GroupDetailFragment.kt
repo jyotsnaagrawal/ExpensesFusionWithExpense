@@ -1,11 +1,9 @@
 package com.jyotsna.expensesfusion
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.Button
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -19,15 +17,19 @@ class GroupDetailFragment : Fragment() {
 
     private lateinit var database: DatabaseReference
     private lateinit var billsRecyclerView: RecyclerView
+    private lateinit var addBillButton: Button
     private lateinit var billsAdapter: BillsAdapter
     private lateinit var groupId: String
-    private val billsList: MutableList<Bill> = mutableListOf()
+
+    private val billsList = mutableListOf<Bill>()
 
     companion object {
-        fun newInstance(groupId: String) = GroupDetailFragment().apply {
-            arguments = Bundle().apply {
-                putString("groupId", groupId)
-            }
+        fun newInstance(groupId: String): GroupDetailFragment {
+            val fragment = GroupDetailFragment()
+            val args = Bundle()
+            args.putString("groupId", groupId)
+            fragment.arguments = args
+            return fragment
         }
     }
 
@@ -49,11 +51,20 @@ class GroupDetailFragment : Fragment() {
         loadBills()
 
         addBillButton.setOnClickListener {
-            showAddBillDialog()
+            navigateToAddBill()
         }
 
         return view
     }
+
+    private fun navigateToAddBill() {
+        val addBillFragment = AddBillFragment.newInstance(groupId)
+        requireActivity().supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, addBillFragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
 
     private fun loadBills() {
         database.child("groups").child(groupId).child("bills")
@@ -67,43 +78,9 @@ class GroupDetailFragment : Fragment() {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(requireContext(), "Failed to load bills.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Failed to load bills.", Toast.LENGTH_SHORT)
+                        .show()
                 }
             })
-    }
-
-    private fun showAddBillDialog() {
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_bill, null)
-        val billTitleEditText = dialogView.findViewById<EditText>(R.id.billTitleEditText)
-        val amountEditText = dialogView.findViewById<EditText>(R.id.amountEditText)
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Add Bill")
-            .setView(dialogView)
-            .setPositiveButton("Save") { _, _ ->
-                val title = billTitleEditText.text.toString().trim()
-                val amount = amountEditText.text.toString().toDoubleOrNull()
-
-                if (title.isNotEmpty() && amount != null) {
-                    saveBillToFirebase(title, amount)
-                } else {
-                    Toast.makeText(requireContext(), "Please enter valid inputs.", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun saveBillToFirebase(title: String, amount: Double) {
-        val billId = database.child("groups").child(groupId).child("bills").push().key ?: return
-        val newBill = Bill(title = title, amount = amount)
-
-        database.child("groups").child(groupId).child("bills").child(billId).setValue(newBill)
-            .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Bill added successfully!", Toast.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener {
-                Toast.makeText(requireContext(), "Failed to add bill.", Toast.LENGTH_SHORT).show()
-            }
     }
 }

@@ -13,27 +13,21 @@ class MainActivity : AppCompatActivity() {
 
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
 
-        // Navigate to SplitBillsFragment by default
-        loadFragment(SplitBillsFragment())
-        bottomNavigationView.selectedItemId = R.id.navigation_split_bills
+//        // Set default fragment
+//        if (savedInstanceState == null) {
+//            loadFragment(SplitBillsFragment())
+//        }
 
-        // Handle navigation item selection
+        // Handle bottom navigation item clicks
         bottomNavigationView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.navigation_split_bills -> {
-                    loadFragment(SplitBillsFragment())
-                    true
-                }
-                R.id.navigation_expense_tracker -> {
-                    loadFragment(ExpenseTrackerFragment())
-                    true
-                }
-                R.id.navigation_groups -> {
-                    loadFragment(GroupsFragment())
-                    true
-                }
-                else -> false
+            val fragment = when (item.itemId) {
+//                R.id.navigation_split_bills -> SplitBillsFragment()
+                R.id.navigation_expense_tracker -> ExpenseTrackerFragment()
+                R.id.navigation_groups -> GroupsFragment()
+                else -> null
             }
+            fragment?.let { loadFragment(it) }
+            true
         }
     }
 

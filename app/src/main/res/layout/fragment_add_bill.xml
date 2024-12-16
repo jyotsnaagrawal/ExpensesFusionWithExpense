@@ -1,16 +1,20 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- Bill Title Input -->
     <EditText
         android:id="@+id/billTitleEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Bill Title"
+        android:inputType="text"
         android:minHeight="48dp" />
 
+    <!-- Bill Amount Input -->
     <EditText
         android:id="@+id/amountEditText"
         android:layout_width="match_parent"
@@ -19,20 +23,26 @@
         android:inputType="numberDecimal"
         android:minHeight="48dp" />
 
-    <Spinner
-        android:id="@+id/paidBySpinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="48dp" />
-
+    <!-- Add Participant Button -->
     <Button
         android:id="@+id/addParticipantButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Add Participant" />
 
+    <!-- RecyclerView for Participants -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/participantsRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="vertical" />
+
+    <!-- Save Bill Button -->
+    <Button
+        android:id="@+id/saveBillButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save Bill" />
+
 </LinearLayout>

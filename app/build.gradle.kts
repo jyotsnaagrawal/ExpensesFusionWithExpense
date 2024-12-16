@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.foundation.android)
     implementation(libs.support.annotations)
     implementation(libs.google.firebase.firestore.ktx)
+    implementation(libs.androidx.navigation.runtime.ktx)
 
     // Unit Testing dependencies
     testImplementation(libs.junit)

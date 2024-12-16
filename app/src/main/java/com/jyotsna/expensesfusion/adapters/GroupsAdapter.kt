@@ -6,17 +6,15 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.jyotsna.expensesfusion.R
-import com.jyotsna.expensesfusion.models.Group // Correct import for your Group model
+import com.jyotsna.expensesfusion.models.Group
 
 class GroupsAdapter(
     private var groupsList: List<Group>,
-    private val onGroupSelected: (String) -> Unit // Callback for when a group is clicked
+    private val onGroupSelected: (String) -> Unit // Callback for group selection
 ) : RecyclerView.Adapter<GroupsAdapter.GroupViewHolder>() {
 
-    // Update group list dynamically
-    fun updateGroups(newGroups: List<Group>) {
-        groupsList = newGroups
-        notifyDataSetChanged() // Notify RecyclerView of data changes
+    class GroupViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val groupNameTextView: TextView = itemView.findViewById(R.id.groupNameTextView)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GroupViewHolder {
@@ -26,17 +24,18 @@ class GroupsAdapter(
 
     override fun onBindViewHolder(holder: GroupViewHolder, position: Int) {
         val group = groupsList[position]
-        holder.groupNameTextView.text = group.name.ifEmpty { "Unnamed Group" }
+        holder.groupNameTextView.text = group.name
+        // Access the Group's name
 
-        // Handle group item click
         holder.itemView.setOnClickListener {
-            onGroupSelected(group.id)
+            onGroupSelected(group.id) // Pass group ID on selection
         }
     }
 
     override fun getItemCount(): Int = groupsList.size
 
-    class GroupViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val groupNameTextView: TextView = itemView.findViewById(R.id.groupNameTextView)
+    fun updateGroups(newGroups: List<Group>) {
+        groupsList = newGroups
+        notifyDataSetChanged()
     }
 }

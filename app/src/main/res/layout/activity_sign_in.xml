@@ -112,7 +112,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:backgroundTint="@color/primaryColor"
-        android:text="Sign Up"
+        android:text="Sign In"
         android:textColor="@color/white"
         android:textStyle="bold"
         app:cornerRadius="24dp"

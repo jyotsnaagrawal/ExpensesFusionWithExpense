@@ -8,7 +8,6 @@
         android:id="@+id/groupNameEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter group name"
-        android:minHeight="48dp"
-        android:padding="12dp" />
+        android:hint="Group Name"
+        android:inputType="text" />
 </LinearLayout>

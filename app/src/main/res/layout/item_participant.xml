@@ -1,19 +1,30 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="8dp">
 
-    <TextView
-        android:id="@+id/participantTextView"
+    <!-- Participant Name Input -->
+    <EditText
+        android:id="@+id/participantEditText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Participant Name"
-        android:textSize="16sp" />
+        android:layout_weight="2"
+        android:hint="Participant Name"
+        android:minHeight="48dp" />
 
+    <!-- Paid Checkbox -->
     <CheckBox
-        android:id="@+id/participantCheckBox"
+        android:id="@+id/checkBoxPaid"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="Paid" />
+
+    <!-- Owes Checkbox -->
+    <CheckBox
+        android:id="@+id/checkBoxOwes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Owes" />
 </LinearLayout>
