@@ -54,15 +54,15 @@ class ExpenseTrackerFragment : Fragment() {
         filterButton = view.findViewById(R.id.filterButton)
         val addExpenseButton = view.findViewById<Button>(R.id.addExpenseButton)
 
-        // Set up Date Picker for filter input
+        // Date picker for filtering
         dateFilterEditText.setOnClickListener {
-            showDatePicker()
+            showDatePicker { date -> dateFilterEditText.setText(date) }
         }
 
-        // Load all expenses initially
+        // Load expenses initially
         loadExpenses()
 
-        // Filter expenses when "Filter" button is clicked
+        // Filter expenses
         filterButton.setOnClickListener {
             val selectedDate = dateFilterEditText.text.toString().trim()
             if (selectedDate.isNotEmpty()) {
@@ -72,7 +72,7 @@ class ExpenseTrackerFragment : Fragment() {
             }
         }
 
-        // Show "Add Expense" dialog on button click
+        // Add new expense
         addExpenseButton.setOnClickListener {
             showAddExpenseDialog()
         }
@@ -80,44 +80,18 @@ class ExpenseTrackerFragment : Fragment() {
         return view
     }
 
-    // Show a date picker for filter input
-    private fun showDatePicker() {
+    private fun showDatePicker(onDateSelected: (String) -> Unit) {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
         val day = calendar.get(Calendar.DAY_OF_MONTH)
 
         DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
-            val selectedDate = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay)
-            dateFilterEditText.setText(selectedDate)
+            val date = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay)
+            onDateSelected(date)
         }, year, month, day).show()
     }
 
-    // Filter expenses by selected date
-    private fun filterExpensesByDate(selectedDate: String) {
-        val currentUser = auth.currentUser ?: return
-        database.child("expenses").child(currentUser.uid)
-            .orderByChild("date")
-            .equalTo(selectedDate)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val expenses = snapshot.children.mapNotNull {
-                        it.value as? Map<String, Any>
-                    }
-                    if (expenses.isNotEmpty()) {
-                        displayExpenses(expenses)
-                    } else {
-                        Toast.makeText(requireContext(), "No expenses found for $selectedDate", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("ExpenseTracker", "Failed to filter expenses: ${error.message}")
-                }
-            })
-    }
-
-    // Load all expenses from Firebase
     private fun loadExpenses() {
         val currentUser = auth.currentUser ?: return
         database.child("expenses").child(currentUser.uid)
@@ -135,23 +109,37 @@ class ExpenseTrackerFragment : Fragment() {
             })
     }
 
-    // Display expenses in charts and text views
+    private fun filterExpensesByDate(date: String) {
+        val currentUser = auth.currentUser ?: return
+        database.child("expenses").child(currentUser.uid)
+            .orderByChild("date").equalTo(date)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val expenses = snapshot.children.mapNotNull {
+                        it.value as? Map<String, Any>
+                    }
+                    displayExpenses(expenses)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("ExpenseTracker", "Failed to filter expenses: ${error.message}")
+                }
+            })
+    }
+
     private fun displayExpenses(expenses: List<Map<String, Any>>) {
-        // Total expenses
         val total = expenses.sumOf { it["amount"].toString().toDouble() }
         totalExpensesTextView.text = "Total Expenses: $$total"
 
-        // First and last expense dates
         val dates = expenses.map { it["date"].toString() }.sorted()
         firstExpenseTextView.text = "First Expense: ${dates.firstOrNull() ?: "N/A"}"
         lastExpenseTextView.text = "Last Expense: ${dates.lastOrNull() ?: "N/A"}"
 
-        // Group by category
         val categoryData = expenses.groupBy { it["category"].toString() }
             .mapValues { it.value.sumOf { expense -> expense["amount"].toString().toDouble() } }
 
-        // Update pie chart
         updatePieChart(categoryData)
+        updateBarChart(categoryData)
     }
 
     private fun updatePieChart(categoryData: Map<String, Double>) {
@@ -167,6 +155,24 @@ class ExpenseTrackerFragment : Fragment() {
         pieChart.invalidate()
     }
 
+    private fun updateBarChart(categoryData: Map<String, Double>) {
+        val entries = categoryData.entries.mapIndexed { index, entry ->
+            BarEntry(index.toFloat(), entry.value.toFloat()) // Convert to BarEntry
+        }
+
+        val dataSet = BarDataSet(entries, "Expenses by Category")
+        dataSet.colors = listOf(
+            resources.getColor(R.color.purple_200),
+            resources.getColor(R.color.teal_200),
+            resources.getColor(R.color.yellow)
+        )
+
+        barChart.data = BarData(dataSet)
+        barChart.description = Description().apply { text = "Expenses by Category" }
+        barChart.invalidate() // Refresh chart
+    }
+
+
     private fun showAddExpenseDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_expense, null)
         val amountEditText = dialogView.findViewById<EditText>(R.id.amountEditText)
@@ -174,21 +180,21 @@ class ExpenseTrackerFragment : Fragment() {
         val dateEditText = dialogView.findViewById<EditText>(R.id.dateEditText)
         val descriptionEditText = dialogView.findViewById<EditText>(R.id.descriptionEditText)
 
-        dateEditText.setOnClickListener { showDatePicker() }
+        dateEditText.setOnClickListener { showDatePicker { date -> dateEditText.setText(date) } }
 
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("Add Expense")
             .setView(dialogView)
             .setPositiveButton("Save") { _, _ ->
                 val amount = amountEditText.text.toString().toDoubleOrNull()
-                val category = categoryEditText.text.toString()
-                val date = dateEditText.text.toString()
-                val description = descriptionEditText.text.toString()
+                val category = categoryEditText.text.toString().trim()
+                val date = dateEditText.text.toString().trim()
+                val description = descriptionEditText.text.toString().trim()
 
                 if (amount != null && category.isNotEmpty() && date.isNotEmpty()) {
                     saveExpense(amount, category, date, description)
                 } else {
-                    Toast.makeText(requireContext(), "Please fill in all fields.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Please fill in all fields correctly.", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -208,10 +214,10 @@ class ExpenseTrackerFragment : Fragment() {
 
         database.child("expenses").child(currentUser.uid).child(expenseId).setValue(expense)
             .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Expense saved successfully!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Expense added successfully!", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { e ->
-                Log.e("ExpenseTracker", "Failed to save expense: ${e.message}")
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to save expense", Toast.LENGTH_SHORT).show()
             }
     }
 }
