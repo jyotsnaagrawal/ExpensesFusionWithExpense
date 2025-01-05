@@ -1,10 +1,10 @@
 package com.jyotsna.expensesfusion
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -17,7 +17,6 @@ class SplitBillsFragment : Fragment() {
     private lateinit var database: DatabaseReference
     private lateinit var billSummaryRecyclerView: RecyclerView
     private lateinit var billSummaryAdapter: BillSummaryAdapter
-
     private val billSummaryList = mutableListOf<BillSummary>()
 
     override fun onCreateView(
@@ -45,50 +44,51 @@ class SplitBillsFragment : Fragment() {
         database.child("groups").addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 billSummaryList.clear()
+                Log.d("SplitBillsFragment", "Data fetched from Firebase: ${snapshot.childrenCount} groups")
+
                 for (groupSnapshot in snapshot.children) {
-                    val groupId = groupSnapshot.key ?: continue
                     val groupName = groupSnapshot.child("name").getValue(String::class.java) ?: "Unknown Group"
+                    Log.d("SplitBillsFragment", "Processing group: $groupName")
 
                     val billsSnapshot = groupSnapshot.child("bills")
                     for (billSnapshot in billsSnapshot.children) {
-                        val title = billSnapshot.child("title").getValue(String::class.java) ?: "No Title"
-                        val amount = try {
-                            billSnapshot.child("amount").getValue(Double::class.java)
+                        try {
+                            val title = billSnapshot.child("title").getValue(String::class.java) ?: "No Title"
+                            val amount = billSnapshot.child("amount").getValue(Double::class.java) ?: 0.0
+                            val paidBy = billSnapshot.child("paidBy").getValue(String::class.java) ?: "Unknown"
+
+                            val participants = billSnapshot.child("participants").children.associate {
+                                val name = it.key ?: "Unknown"
+                                val value = it.getValue(Double::class.java) ?: 0.0
+                                name to value
+                            }
+
+                            val paymentStatus = if (participants.values.sum() >= amount) "Paid" else "Pending"
+                            Log.d("SplitBillsFragment", "Bill processed: $title, Amount: $amount, Paid By: $paidBy, Participants: $participants, Status: $paymentStatus")
+
+                            val billSummary = BillSummary(
+                                groupName = groupName,
+                                title = title,
+                                amount = amount,
+                                paidBy = paidBy,
+                                participants = participants,
+                                paymentStatus = paymentStatus
+                            )
+                            billSummaryList.add(billSummary)
+
                         } catch (e: Exception) {
-                            billSnapshot.child("amount").getValue(String::class.java)?.toDoubleOrNull()
-                        } ?: 0.0
-
-                        val paidBy = billSnapshot.child("paidBy").getValue(String::class.java) ?: "Unknown"
-
-                        // Parse participants safely
-                        val participants = mutableMapOf<String, Double>()
-                        for (participantSnapshot in billSnapshot.child("participants").children) {
-                            val name = participantSnapshot.key ?: continue
-                            val share = try {
-                                participantSnapshot.getValue(Double::class.java)
-                            } catch (e: Exception) {
-                                participantSnapshot.getValue(String::class.java)?.toDoubleOrNull()
-                            } ?: 0.0
-                            participants[name] = share
+                            Log.e("SplitBillsFragment", "Error processing bill data: ${e.message}", e)
                         }
-
-                        val billSummary = BillSummary(
-                            groupName = groupName,
-                            title = title,
-                            amount = amount,
-                            paidBy = paidBy,
-                            participants = participants
-                        )
-                        billSummaryList.add(billSummary)
                     }
                 }
+
                 billSummaryAdapter.notifyDataSetChanged()
+                Log.d("SplitBillsFragment", "Bill summary loaded successfully with ${billSummaryList.size} items.")
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(requireContext(), "Failed to load bills: ${error.message}", Toast.LENGTH_SHORT).show()
+                Log.e("SplitBillsFragment", "Failed to load bills: ${error.message}")
             }
         })
     }
-
 }

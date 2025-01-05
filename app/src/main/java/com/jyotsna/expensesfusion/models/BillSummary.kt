@@ -5,5 +5,6 @@ data class BillSummary(
     val title: String,
     val amount: Double,
     val paidBy: String,
-    val participants: Map<String, Double>
+    val participants: Map<String, Double>,
+    val paymentStatus: String
 )
